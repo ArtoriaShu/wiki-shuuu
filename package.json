@@ -16,12 +16,18 @@
   },
   "dependencies": {
     "@astro-community/astro-embed-youtube": "^0.5.10",
+    "@astrojs/react": "^5.0.6",
     "@astrojs/starlight": "0.38.1",
     "@astrojs/starlight-tailwind": "5.0.0",
     "@tailwindcss/vite": "^4.1.17",
+    "@types/react": "^19.2.15",
+    "@types/react-dom": "^19.2.3",
+    "animal-island-ui": "^0.9.6",
     "astro": "6.0.4",
     "astro-font": "^1.1.0",
     "marked": "^17.0.1",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
     "sharp": "^0.34.5",
     "vite": "^7.2.6"
   },

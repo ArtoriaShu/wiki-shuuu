@@ -4,11 +4,13 @@ import Footer from "./Footer.astro";
 import CTA from "../CTA.astro";
 import SidebarNav from "../SidebarNav.astro";
 import ImageMod from "../ImageMod.astro";
+import CursorDemo from "../CursorDemo.tsx";
 
 const { hasSidebar } = Astro.locals.starlightRoute;
 ---
 
 <div class="page sl-flex">
+  <CursorDemo client:load />
   {
     !hasSidebar ? (
       <div class="hero-bg">

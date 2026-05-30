@@ -56,6 +56,29 @@
   );
   --sl-color-hairline-light:#252525;
   --sidebar-nav-height: 100px;
+
+  /* 文档页标题大小 */
+  --sl-text-h1: 1rem;
+  --sl-text-h2: 0.7rem;
+  --sl-text-h3: 0.9rem;
+  --sl-text-h4: 0.85rem;
+}
+
+@media (min-width: 50em) {
+  :root {
+    --sl-text-h1: 1rem;
+    --sl-text-h2: 0.7rem;
+    --sl-text-h3: 0.9rem;
+    --sl-text-h4: 0.85rem;
+  }
+}
+
+@layer overrides {
+  .sl-markdown-content h1:not(:where(.not-content *)) { font-size: 1rem; }
+  .sl-markdown-content h2:not(:where(.not-content *)) { font-size: 0.7rem; }
+  .sl-markdown-content h3:not(:where(.not-content *)) { font-size: 0.9rem; }
+  .sl-markdown-content h4:not(:where(.not-content *)) { font-size: 0.85rem; }
+  .sl-container h1 { font-size: 1rem; }
 }
 
 /* Light mode colors. */
@@ -126,4 +149,12 @@
 @import "./navigation.css";
 @import "./components.css";
 @import "./button.css";
+
+.sl-markdown-content h1:not(:where(.not-content *)) { font-size: 24px !important; }
+.sl-markdown-content h2:not(:where(.not-content *)) { font-size: 18px !important; }
+.sl-markdown-content h3:not(:where(.not-content *)) { font-size: 0.9rem !important; }
+.sl-markdown-content h4:not(:where(.not-content *)) { font-size: 0.85rem !important; }
+.sl-container h1 { font-size: 24px !important; }
+
+.sl-anchor-link { display: none !important; }
 

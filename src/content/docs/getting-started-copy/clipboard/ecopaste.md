@@ -3,7 +3,7 @@ title: EcoPaste
 description: 开源免费的剪贴板管理工具
 sidebar:
   badge:
-    text: 推荐
+    text: 夯
     variant: success
 ---
 
