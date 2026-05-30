@@ -50,7 +50,7 @@ const { hasSidebar } = Astro.locals.starlightRoute;
   <header class={"header" + (hasSidebar ? " has-sidebar" : " no-sidebar")}>
     <slot name="header" />
   </header>
-  {hasSidebar && <SidebarNav />}
+  {/* {hasSidebar && <SidebarNav />} */}
   <div class="main-frame">
     <div class="container flex relative">
       {
