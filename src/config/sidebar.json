@@ -1,0 +1,104 @@
+{
+  "main": [
+    {
+      "label": "常用办公软件",
+      "collapsed": true,
+      "items": [
+        {
+          "label": "[download] 一键下载安装",
+          "slug": "getting-started-copy/download"
+        },
+        {
+          "label": "[seti:image] 截图软件",
+          "collapsed": true,
+          "autogenerate": { "directory": "getting-started-copy/screenshot" }
+        },
+        {
+          "label": "[list-format] 剪贴板软件",
+          "collapsed": true,
+          "autogenerate": { "directory": "getting-started-copy/clipboard" }
+        },
+        {
+          "label": "[translate] 翻译软件",
+          "collapsed": true,
+          "autogenerate": { "directory": "getting-started-copy/translation" }
+        },
+        {
+          "label": "[magnifier] 搜索软件",
+          "collapsed": true,
+          "autogenerate": { "directory": "getting-started-copy/search" }
+        },
+        {
+          "label": "[laptop] 输入法管理",
+          "collapsed": true,
+          "autogenerate": { "directory": "getting-started-copy/input-method" }
+        }
+      ]
+    },
+    {
+      "label": "Getting Started",
+      "translations": {
+        "fr": "Commencer"
+      },
+      "items": [
+        {
+          "label": "[seti:vite] Introduction",
+          "translations": {
+            "fr": "[seti:vite] Introduction"
+          },
+          "autogenerate": { "directory": "getting-started/introduction" }
+        },
+        {
+          "label": "[setting] Global Settings",
+          "translations": {
+            "fr": "[setting] Paramètres globaux"
+          },
+          "autogenerate": { "directory": "getting-started/global-settings" }
+        },
+        {
+          "label": "[seti:plan] Navigation",
+          "translations": {
+            "fr": "[seti:plan] Navigation"
+          },
+          "slug": "getting-started/navigation"
+        }
+      ]
+    },
+    {
+      "label": "Content",
+      "translations": {
+        "fr": "Contenu"
+      },
+      "items": [
+        {
+          "label": "[document] Components and Block",
+          "translations": {
+            "fr": "[document] Composants et blocs"
+          },
+          "autogenerate": { "directory": "contents/components" }
+        },
+        {
+          "label": "[pencil] Editing Content",
+          "translations": {
+            "fr": "[pencil] Édition du contenu"
+          },
+          "autogenerate": { "directory": "contents/editing" }
+        }
+      ]
+    },
+    {
+      "label": "Reference",
+      "translations": {
+        "fr": "Référence"
+      },
+      "autogenerate": { "directory": "reference" }
+    },
+    {
+      "label": "Configurations",
+      "translations": {
+        "fr": "Configurations"
+      },
+      "autogenerate": { "directory": "configurations" }
+    }
+  ]
+}

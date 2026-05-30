@@ -1,0 +1,62 @@
+---
+import MobileMenuFooter from "@astrojs/starlight/components/MobileMenuFooter.astro";
+import SidebarPersister from "@astrojs/starlight/components/SidebarPersister.astro";
+import SidebarSublist from "./SidebarSublist.astro";
+
+let sidebar = Astro.locals.starlightRoute.sidebar;
+
+// Reorder to match sidebar.json order
+const order = ["常用办公软件", "Getting Started", "Content", "Reference", "Configurations"];
+sidebar = [...sidebar].sort((a, b) => {
+  const ai = order.indexOf(a.label);
+  const bi = order.indexOf(b.label);
+  if (ai === -1 && bi === -1) return 0;
+  if (ai === -1) return 1;
+  if (bi === -1) return -1;
+  return ai - bi;
+});
+---
+
+<SidebarPersister>
+  <SidebarSublist sublist={sidebar}  />
+</SidebarPersister>
+
+<div class="md:sl-hidden">
+  <MobileMenuFooter />
+</div>
+
+<script>
+  // SidebarPersistState.ts only saves state when a <summary> is clicked.
+  // Clicking a link doesn't trigger that, so expanded sub-groups get lost on navigation.
+  // Fix: save the full open state whenever any link in the sidebar is clicked.
+  function saveSidebarState() {
+    const target = document.querySelector<HTMLElement>('sl-sidebar-state-persist');
+    if (!target) return;
+    const hash = target.dataset.hash || '';
+    const allDetails = target.querySelectorAll<HTMLDetailsElement>('details');
+    const open: (boolean | null)[] = [];
+    allDetails.forEach((details) => {
+      const restore = details.querySelector<HTMLElement>('sl-sidebar-restore');
+      const idx = parseInt(restore?.dataset.index || '');
+      if (!isNaN(idx)) {
+        // Top-level details (direct child of .top-level > li) always stay open
+        const isTopLevel = details.parentElement?.matches('.top-level > li');
+        open[idx] = isTopLevel ? true : details.open;
+      }
+    });
+    try {
+      const scroller = document.getElementById('starlight__sidebar');
+      sessionStorage.setItem('sl-sidebar-state', JSON.stringify({
+        hash,
+        open,
+        scroll: scroller?.scrollTop || 0,
+      }));
+    } catch {}
+  }
+
+  document.addEventListener('click', (e) => {
+    if (e.target instanceof Element && e.target.closest('a[href]')) {
+      saveSidebarState();
+    }
+  });
+</script>
