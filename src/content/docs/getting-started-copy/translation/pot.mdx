@@ -1,0 +1,55 @@
+---
+title: Pot
+description: 开源跨平台的划词翻译软件
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+import NewCard from '../../../../components/user-components/NewCard.astro';
+import Grid from '../../../../components/user-components/Grid.astro';
+
+Pot 是一款开源跨平台划词翻译工具，支持多种翻译引擎，选中即译，支持 Windows、macOS 和 Linux。
+
+## 核心功能
+
+<Grid columns={2}>
+  <NewCard icon="pencil" title="划词翻译" iconColor="#979BFF" size="sm">
+    选中文字后自动弹出翻译结果，支持 DeepL、OpenAI、Google、有道、百度等多种引擎。
+  </NewCard>
+  <NewCard icon="magnifier" title="截图翻译" iconColor="#6ADFB8" size="sm">
+    截取屏幕区域进行 OCR 识别并翻译，无需复制文字。
+  </NewCard>
+  <NewCard icon="document" title="历史与生词本" iconColor="#FF9B6A" size="sm">
+    自动保存翻译历史，支持收藏常用词汇到生词本。
+  </NewCard>
+  <NewCard icon="setting" title="输入翻译" iconColor="#FFD166" size="sm">
+    手动输入文字进行翻译，支持多引擎结果对比显示。
+  </NewCard>
+</Grid>
+
+<img src="/divider-line-custom.svg" style="width:100%;height:12px;object-fit:contain;margin: 2rem 0;" alt="" />
+
+## 下载安装
+
+<Tabs>
+<TabItem label="winget">
+
+```sh
+winget install Pot-app.Pot
+```
+
+</TabItem>
+<TabItem label="官网下载">
+
+前往官网下载对应系统安装包：[https://pot-app.com/download.html](https://pot-app.com/download.html)
+
+</TabItem>
+<TabItem label="一键安装">
+
+使用本站提供的一键安装脚本，在 CMD（管理员）中运行：
+
+```bat wrap
+curl -o install.bat https://raw.githubusercontent.com/ArtoriaShu/wiki-shuuu/master/public/install.bat && install.bat
+```
+
+</TabItem>
+</Tabs>

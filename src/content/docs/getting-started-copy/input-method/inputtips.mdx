@@ -1,0 +1,55 @@
+---
+title: InputTips
+description: Windows 输入法状态可视化提示工具
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+import NewCard from '../../../../components/user-components/NewCard.astro';
+import Grid from '../../../../components/user-components/Grid.astro';
+
+InputTips 是一款轻量级输入法状态提示工具，在光标附近实时显示当前中英文状态，告别误输入，仅支持 Windows。
+
+## 核心功能
+
+<Grid columns={2}>
+  <NewCard icon="information" title="状态提示" iconColor="#979BFF" size="sm">
+    在光标附近实时显示当前输入法状态（中文 / 英文），直观清晰。
+  </NewCard>
+  <NewCard icon="setting" title="自定义样式" iconColor="#FF9B6A" size="sm">
+    可自定义提示框的颜色、大小、位置偏移，适配个人习惯。
+  </NewCard>
+  <NewCard icon="laptop" title="多输入法兼容" iconColor="#6ADFB8" size="sm">
+    兼容微软拼音、搜狗、百度等主流输入法，开箱即用。
+  </NewCard>
+  <NewCard icon="rocket" title="轻量后台运行" iconColor="#FFD166" size="sm">
+    后台静默运行，占用资源极少，支持开机自启。
+  </NewCard>
+</Grid>
+
+<img src="/divider-line-custom.svg" style="width:100%;height:12px;object-fit:contain;margin: 2rem 0;" alt="" />
+
+## 下载安装
+
+<Tabs>
+<TabItem label="curl">
+
+```bat wrap
+curl -L -o InputTip-setup.exe https://github.com/abgox/InputTip/releases/download/v3.3.0/InputTip.exe && InputTip-setup.exe
+```
+
+</TabItem>
+<TabItem label="官网下载">
+
+前往 GitHub Releases 下载最新版本：[https://github.com/abgox/InputTip/releases/tag/v3.3.0](https://github.com/abgox/InputTip/releases/tag/v3.3.0)
+
+</TabItem>
+<TabItem label="一键安装">
+
+使用本站提供的一键安装脚本，在 CMD（管理员）中运行：
+
+```bat wrap
+curl -o install.bat https://raw.githubusercontent.com/ArtoriaShu/wiki-shuuu/master/public/install.bat && install.bat
+```
+
+</TabItem>
+</Tabs>

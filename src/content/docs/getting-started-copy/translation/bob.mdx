@@ -1,0 +1,48 @@
+---
+title: Bob
+description: macOS 专属的翻译和 OCR 工具
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+import NewCard from '../../../../components/user-components/NewCard.astro';
+import Grid from '../../../../components/user-components/Grid.astro';
+
+Bob 是 macOS 专属的翻译与 OCR 工具，支持划词、截图、输入多种翻译方式，插件生态丰富，仅支持 macOS。
+
+## 核心功能
+
+<Grid columns={2}>
+  <NewCard icon="pencil" title="划词翻译" iconColor="#979BFF" size="sm">
+    选中文字后通过快捷键触发翻译，支持 DeepL、OpenAI、Google、有道等多种引擎。
+  </NewCard>
+  <NewCard icon="magnifier" title="截图翻译 / OCR" iconColor="#6ADFB8" size="sm">
+    截取屏幕区域进行 OCR 识别并翻译，也可单独识别图片中的文字。
+  </NewCard>
+  <NewCard icon="document" title="词典查询" iconColor="#FF9B6A" size="sm">
+    支持英文单词详细释义查询，适合英语学习场景。
+  </NewCard>
+  <NewCard icon="setting" title="插件系统" iconColor="#FFD166" size="sm">
+    通过插件扩展翻译引擎和功能，社区插件丰富。
+  </NewCard>
+</Grid>
+
+<img src="/divider-line-custom.svg" style="width:100%;height:12px;object-fit:contain;margin: 2rem 0;" alt="" />
+
+## 下载安装
+
+<Tabs>
+<TabItem label="Mac App Store">
+
+在 Mac App Store 搜索 **Bob** 安装，基础功能免费，高级功能需付费订阅。
+
+</TabItem>
+<TabItem label="官网下载">
+
+前往官网下载最新版本：[https://bobtranslate.com](https://bobtranslate.com)
+
+</TabItem>
+</Tabs>
+
+:::note
+仅支持 macOS 系统。
+:::

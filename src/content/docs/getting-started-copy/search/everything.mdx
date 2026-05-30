@@ -1,0 +1,55 @@
+---
+title: Everything
+description: Windows 上最快的文件搜索工具
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+import NewCard from '../../../../components/user-components/NewCard.astro';
+import Grid from '../../../../components/user-components/Grid.astro';
+
+Everything 基于 NTFS 索引实现秒级全盘文件搜索，速度远超系统自带搜索，仅支持 Windows。
+
+## 核心功能
+
+<Grid columns={2}>
+  <NewCard icon="magnifier" title="极速搜索" iconColor="#979BFF" size="sm">
+    基于 NTFS 索引，秒级搜索全盘文件，文件变动后索引即时更新。
+  </NewCard>
+  <NewCard icon="document" title="灵活过滤" iconColor="#6ADFB8" size="sm">
+    支持正则表达式、通配符，可按文件类型、大小、日期等条件过滤。
+  </NewCard>
+  <NewCard icon="laptop" title="HTTP 服务" iconColor="#FF9B6A" size="sm">
+    可开启本地 HTTP 服务，通过浏览器在局域网内访问搜索结果。
+  </NewCard>
+  <NewCard icon="setting" title="命令行支持" iconColor="#FFD166" size="sm">
+    支持命令行调用，方便集成到脚本或其他工具中使用。
+  </NewCard>
+</Grid>
+
+<img src="/divider-line-custom.svg" style="width:100%;height:12px;object-fit:contain;margin: 2rem 0;" alt="" />
+
+## 下载安装
+
+<Tabs>
+<TabItem label="winget">
+
+```sh
+winget install voidtools.Everything
+```
+
+</TabItem>
+<TabItem label="官网下载">
+
+前往官网选择安装版或便携版：[https://www.voidtools.com/downloads](https://www.voidtools.com/downloads)
+
+</TabItem>
+<TabItem label="一键安装">
+
+使用本站提供的一键安装脚本，在 CMD（管理员）中运行：
+
+```bat wrap
+curl -o install.bat https://raw.githubusercontent.com/ArtoriaShu/wiki-shuuu/master/public/install.bat && install.bat
+```
+
+</TabItem>
+</Tabs>

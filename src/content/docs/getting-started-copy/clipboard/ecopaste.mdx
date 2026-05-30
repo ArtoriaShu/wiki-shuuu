@@ -1,0 +1,66 @@
+---
+title: EcoPaste
+description: 开源免费的剪贴板历史管理工具
+sidebar:
+  badge:
+    text: 夯
+    variant: success
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+import NewCard from '../../../../components/user-components/NewCard.astro';
+import Grid from '../../../../components/user-components/Grid.astro';
+
+EcoPaste 是一款开源免费的剪贴板管理工具，自动记录复制历史，支持快速搜索与调用，支持 Windows 和 macOS。
+
+## 核心功能
+
+<Grid columns={2}>
+  <NewCard icon="document" title="剪贴板历史" iconColor="#979BFF" size="sm">
+    自动保存复制的文本、图片、文件路径，随时回溯历史记录。
+  </NewCard>
+  <NewCard icon="magnifier" title="快速搜索" iconColor="#6ADFB8" size="sm">
+    通过关键词秒速找到历史内容，支持分类管理与收藏夹。
+  </NewCard>
+  <NewCard icon="pencil" title="纯文本粘贴" iconColor="#FF9B6A" size="sm">
+    一键去除格式，粘贴纯文本内容，避免样式污染。
+  </NewCard>
+  <NewCard icon="setting" title="隐私保护" iconColor="#FFD166" size="sm">
+    可设置不记录特定应用的内容，保护敏感信息安全。
+  </NewCard>
+</Grid>
+
+<img src="/divider-line-custom.svg" style="width:100%;height:12px;object-fit:contain;margin: 2rem 0;" alt="" />
+
+## 下载安装
+
+<Tabs>
+<TabItem label="curl">
+
+```bat wrap
+curl -L -o EcoPaste-setup.exe https://github.com/EcoPasteHub/EcoPaste/releases/latest/download/EcoPaste_x64-setup.exe && EcoPaste-setup.exe
+```
+
+</TabItem>
+<TabItem label="winget">
+
+```sh
+winget install EcoPaste
+```
+
+</TabItem>
+<TabItem label="官网下载">
+
+前往 GitHub Releases 下载最新版本：[https://github.com/EcoPasteHub/EcoPaste/releases](https://github.com/EcoPasteHub/EcoPaste/releases)
+
+</TabItem>
+<TabItem label="一键安装">
+
+使用本站提供的一键安装脚本，在 CMD（管理员）中运行：
+
+```bat wrap
+curl -o install.bat https://raw.githubusercontent.com/ArtoriaShu/wiki-shuuu/master/public/install.bat && install.bat
+```
+
+</TabItem>
+</Tabs>

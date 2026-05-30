@@ -7,23 +7,33 @@ sidebar:
 ---
 
 import DownloadButton from '../../../components/AnimalDemo.tsx';
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+import ToolTable from '../../../components/ToolTable.tsx';
 
-<div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; border: 1.5px dashed #C8CAD1; border-radius: 10px; padding: 1rem 1.25rem;">
-<div>
+<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+  <h2 style="margin: 0;">工具说明</h2>
+  <DownloadButton client:load />
+</div>
 
 单击下载 `install.bat`，双击运行即可以管理员权限安装工具。
 
-支持：**PixPin**、**EcoPaste**、**Pot**、**Everything**、**InputTips**
+也可以直接在 CMD（管理员）中运行以下命令，自动下载并执行安装脚本。
 
-</div>
-<DownloadButton client:load />
-</div>
+<ToolTable client:load />
 
-
-<img src="/divider-line-custom.svg" style="width:100%;height:12px;object-fit:contain;" alt="" />
-
+<img src="/divider-line-custom.svg" style="width:100%;height:12px;object-fit:contain;margin: 2rem 0;" alt="" />
 
 ## 脚本代码
+
+<Tabs>
+<TabItem label="CMD">
+
+```bat wrap
+curl -o install.bat https://raw.githubusercontent.com/ArtoriaShu/wiki-shuuu/master/public/install.bat && install.bat
+```
+
+</TabItem>
+<TabItem label="install.bat">
 
 ```powershell title="install.bat"
 <# ::
@@ -380,3 +390,6 @@ while ($true) {
     }
 }
 ```
+
+</TabItem>
+</Tabs>
