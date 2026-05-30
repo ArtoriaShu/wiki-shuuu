@@ -1,4 +1,4 @@
----
+﻿---
 title: 一键下载安装
 description: 常用办公软件一键下载安装指南
 sidebar:
@@ -15,7 +15,7 @@ import ToolTable from '../../../components/ToolTable.tsx';
   <DownloadButton client:load />
 </div>
 
-单击下载 `install.bat`，双击运行即可以管理员权限安装工具。
+单击下载 `install.bat`，右键以管理员身份运行安装工具。
 
 也可以直接在 CMD（管理员）中运行以下命令，自动下载并执行安装脚本。
 
@@ -38,7 +38,14 @@ curl -o install.bat https://raw.githubusercontent.com/ArtoriaShu/wiki-shuuu/mast
 ```powershell title="install.bat"
 <# ::
 @echo off
-PowerShell -NoProfile -ExecutionPolicy Bypass -Command "Start-Process PowerShell -ArgumentList '-NoProfile -ExecutionPolicy Bypass -File ""%~f0""' -Verb RunAs"
+net session >nul 2>&1
+if %errorLevel% neq 0 (
+    echo 请右键此文件，选择"以管理员身份运行"
+    pause
+    exit /b 1
+)
+PowerShell -NoProfile -ExecutionPolicy Bypass -Command "& ([scriptblock]::Create([System.IO.File]::ReadAllText('%~f0', [System.Text.Encoding]::UTF8)))"
+pause
 exit /b
 #>
 
@@ -67,6 +74,32 @@ param(
 
 $ErrorActionPreference = "Stop"
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+# 自动检测并应用系统代理
+$proxyUrl = $null
+try {
+    $regProxy = Get-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings" -ErrorAction SilentlyContinue
+    if ($regProxy.ProxyEnable -eq 1 -and $regProxy.ProxyServer) {
+        $proxyUrl = "http://$($regProxy.ProxyServer)"
+    }
+} catch { }
+if ($proxyUrl) {
+    Write-Host "  检测到系统代理: $proxyUrl" -ForegroundColor DarkGray
+} else {
+    Write-Host "  未检测到系统代理，如需代理请输入（如 http://127.0.0.1:7890），直接回车跳过:" -ForegroundColor Yellow
+    $input = (Read-Host "  代理地址").Trim()
+    if ($input) { $proxyUrl = $input }
+}
+if ($proxyUrl) {
+    [System.Net.WebRequest]::DefaultWebProxy = New-Object System.Net.WebProxy($proxyUrl, $true)
+    [System.Net.WebRequest]::DefaultWebProxy.Credentials = [System.Net.CredentialCache]::DefaultCredentials
+}
+
+trap {
+    Write-Host "`n[错误] $_" -ForegroundColor Red
+    Read-Host "`n按 Enter 键退出"
+    exit 1
+}
 
 # ── 工具列表 ──────────────────────────────────────────────────────────────────
 
@@ -139,28 +172,50 @@ function Read-ToolSelection {
 function Get-GitHubLatestAsset {
     param([string]$Repo, [string]$Pattern)
     Write-Info "查询 GitHub 最新版本: $Repo"
-    $headers = @{ "User-Agent" = "ToolInstaller/1.0" }
+    $headers = @{ "User-Agent" = "Mozilla/5.0" }
     if ($GitHubToken) { $headers["Authorization"] = "Bearer $GitHubToken" }
+    $proxyArgs = if ($proxyUrl) { @{ Proxy = $proxyUrl; ProxyUseDefaultCredentials = $true } } else { @{} }
+    # 优先用 API，限速时降级到抓 HTML
     try {
         $release = Invoke-RestMethod `
             -Uri "https://api.github.com/repos/$Repo/releases/latest" `
-            -Headers $headers `
-            -TimeoutSec 30
-    } catch {
-        if ($_.Exception.Response.StatusCode -eq 403) {
-            throw "GitHub API 速率限制已触发。请通过 -GitHubToken 参数或设置环境变量 GITHUB_TOKEN 来提高限制。"
+            -Headers $headers -TimeoutSec 30 @proxyArgs
+        $asset = $release.assets | Where-Object { $_.name -match $Pattern } | Select-Object -First 1
+        if ($asset) {
+            Write-Info "最新版本: $($release.tag_name)  文件: $($asset.name)"
+            return $asset.browser_download_url
         }
-        throw
+    } catch { }
+    # 降级：直接抓 HTML Release 页面
+    Write-Info "API 不可用，改用网页抓取..."
+    $allContent = ""
+    try {
+        $page = Invoke-WebRequest "https://github.com/$Repo/releases/latest" -UseBasicParsing -Headers $headers -TimeoutSec 30 @proxyArgs
+        $allContent += $page.Content
+        $tag = $page.BaseResponse.ResponseUri.ToString() -replace '.*/tag/', ''
+        if ($tag) {
+            try {
+                $page2 = Invoke-WebRequest "https://github.com/$Repo/releases/expanded_assets/$tag" -UseBasicParsing -Headers $headers -TimeoutSec 30 @proxyArgs
+                $allContent += $page2.Content
+            } catch { }
+        }
+    } catch {
+        throw "无法访问 GitHub Release 页面: $_"
     }
-    $asset = $release.assets | Where-Object { $_.name -match $Pattern } | Select-Object -First 1
-    if (-not $asset) { throw "在 $Repo 中未找到匹配 '$Pattern' 的资产" }
-    Write-Info "最新版本: $($release.tag_name)  文件: $($asset.name)"
-    return $asset.browser_download_url
+    $links = [regex]::Matches($allContent, "/$Repo/releases/download/[^""'<\s]+") |
+             ForEach-Object { "https://github.com" + $_.Value } |
+             Where-Object { $_ -match $Pattern } |
+             Select-Object -Unique
+    if (-not $links) { throw "在 $Repo 中未找到匹配 '$Pattern' 的下载链接" }
+    $url = @($links)[0]
+    Write-Info "找到链接: $url"
+    return $url
 }
 
 function Get-EverythingDownloadUrl {
     Write-Info "查询 Everything 最新版本..."
-    $page  = Invoke-WebRequest "https://www.voidtools.com/downloads/" -UseBasicParsing -TimeoutSec 30
+    $proxyArgs = if ($proxyUrl) { @{ Proxy = $proxyUrl; ProxyUseDefaultCredentials = $true } } else { @{} }
+    $page  = Invoke-WebRequest "https://www.voidtools.com/downloads/" -UseBasicParsing -TimeoutSec 30 @proxyArgs
     $match = [regex]::Match($page.Content, '/Everything-\d+\.\d+\.\d+\.\d+\.x64-Setup\.exe')
     if (-not $match.Success) { throw "无法从 voidtools.com 获取下载链接" }
     return "https://www.voidtools.com$($match.Value)"
@@ -168,33 +223,65 @@ function Get-EverythingDownloadUrl {
 
 function Get-PixPinDownloadUrl {
     Write-Info "查询 PixPin 最新版本..."
-    $pattern = 'https://[^"'']+/PixPin[_-][\d.]+[^"'']*\.exe'
-    foreach ($site in @("https://pixpinapp.com/", "https://pixpin.cn/")) {
+    $pattern = 'https://[^"''<>\s]+/PixPin[^"''<>\s]*\.exe'
+    $proxyArgs = if ($proxyUrl) { @{ Proxy = $proxyUrl; ProxyUseDefaultCredentials = $true } } else { @{} }
+    foreach ($site in @("https://pixpin.cn/download/", "https://pixpin.cn/", "https://pixpinapp.com/")) {
         try {
-            $page  = Invoke-WebRequest $site -UseBasicParsing -TimeoutSec 15
+            $page  = Invoke-WebRequest $site -UseBasicParsing -TimeoutSec 15 @proxyArgs
             $match = [regex]::Match($page.Content, $pattern)
-            if ($match.Success) { return $match.Value }
+            if ($match.Success) {
+                Write-Info "找到下载链接: $($match.Value)"
+                return $match.Value
+            }
         } catch {
             Write-Info "访问 $site 失败，尝试下一个..."
         }
     }
-    throw "无法自动获取 PixPin 下载链接，请手动前往 https://pixpinapp.com 下载"
+    throw "无法自动获取 PixPin 下载链接，请手动前往 https://pixpin.cn/download/ 下载"
 }
 
 function Save-File {
-    param([string]$Url, [string]$Dest)
-    $fileName = [System.IO.Path]::GetFileName($Dest)
-    Write-Info "下载: $fileName"
+    param([string]$Url, [string]$Dest, [string]$Label = "")
+    $fileName = if ($Label) { $Label } else { [System.IO.Path]::GetFileName($Dest) }
     try {
-        Invoke-WebRequest -Uri $Url -OutFile $Dest -UseBasicParsing -TimeoutSec 300
+        $wc = New-Object System.Net.WebClient
+        $wc.Headers.Add("User-Agent", "ToolInstaller/1.0")
+        $lastPct = -1
+        $wc.add_DownloadProgressChanged({
+            param($s, $e)
+            $pct = $e.ProgressPercentage
+            if ($pct -ne $lastPct -and $pct % 5 -eq 0) {
+                $script:lastPct = $pct
+                $bar = "#" * [int]($pct / 5)
+                $empty = "-" * (20 - [int]($pct / 5))
+                $mb = [math]::Round($e.BytesReceived / 1MB, 1)
+                $total = if ($e.TotalBytesToReceive -gt 0) { [math]::Round($e.TotalBytesToReceive / 1MB, 1) } else { "?" }
+                Write-Host "`r    [$bar$empty] $pct%  $mb/$total MB  $fileName" -NoNewline -ForegroundColor Cyan
+            }
+        })
+        $task = $wc.DownloadFileTaskAsync($Url, $Dest)
+        while (-not $task.IsCompleted) { Start-Sleep -Milliseconds 200 }
+        Write-Host ""
+        if ($task.IsFaulted) { throw $task.Exception.InnerException }
+        $wc.Dispose()
     } catch {
         throw "下载失败 ($fileName): $_"
     }
 }
 
 function Invoke-NsisInstaller {
-    param([string]$Path)
-    $p = Start-Process -FilePath $Path -ArgumentList "/S" -Wait -PassThru
+    param([string]$Path, [string]$InstallDir = "")
+    $args = "/S"
+    if ($InstallDir) { $args = "/S /D=$InstallDir" }
+    $p = Start-Process -FilePath $Path -ArgumentList $args -Wait -PassThru
+    if ($p.ExitCode -ne 0) { throw "安装程序退出码: $($p.ExitCode)" }
+}
+
+function Invoke-InnoInstaller {
+    param([string]$Path, [string]$InstallDir = "")
+    $args = "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART"
+    if ($InstallDir) { $args += " /DIR=`"$InstallDir`"" }
+    $p = Start-Process -FilePath $Path -ArgumentList $args -Wait -PassThru
     if ($p.ExitCode -ne 0) { throw "安装程序退出码: $($p.ExitCode)" }
 }
 
@@ -261,55 +348,134 @@ function Test-IsInstalled {
 
 # ── 安装执行 ──────────────────────────────────────────────────────────────────
 
+function Get-ToolInfo {
+    param([string]$Tool, [string]$DownloadDir)
+    switch ($Tool) {
+        "EcoPaste"   { return @{ Url = (Get-GitHubLatestAsset "EcoPasteHub/EcoPaste" "x64-setup\.exe$"); File = "$DownloadDir\EcoPaste-setup.exe"; Type = "nsis" } }
+        "Pot"        { return @{ Url = (Get-GitHubLatestAsset "pot-app/pot-desktop" "_x64-setup\.exe$"); File = "$DownloadDir\pot-setup.exe"; Type = "nsis" } }
+        "Everything" { return @{ Url = (Get-EverythingDownloadUrl); File = "$DownloadDir\Everything-setup.exe"; Type = "nsis" } }
+        "PixPin"     { return @{ Url = (Get-PixPinDownloadUrl); File = "$DownloadDir\PixPin-setup.exe"; Type = "inno" } }
+        "InputTips"  { return @{ Url = (Get-GitHubLatestAsset "abgox/InputTip" "^InputTip\.exe$"); File = "$DownloadDir\InputTip.exe"; Type = "portable" } }
+    }
+}
+
 function Invoke-Install {
     param([string[]]$Tools)
 
-    if (-not $DownloadDir) {
-        $script:DownloadDir = "$env:TEMP\ToolInstaller"
+    # 弹出文件夹选择对话框
+    Write-Host ""
+    Write-Host "  >>> 请在弹出的窗口中选择安装路径..." -ForegroundColor Cyan
+    $defaultPath = "C:\Program Files"
+    Add-Type -AssemblyName System.Windows.Forms
+    $dialog = New-Object System.Windows.Forms.FolderBrowserDialog
+    $dialog.Description = "请选择安装目录"
+    $dialog.SelectedPath = $defaultPath
+    $dialog.ShowNewFolderButton = $true
+    if ($dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
+        $installPath = $dialog.SelectedPath
+    } else {
+        $installPath = $defaultPath
+        Write-Host "  未选择目录，使用默认: $defaultPath" -ForegroundColor Yellow
     }
-    New-Item -ItemType Directory -Force -Path $script:DownloadDir | Out-Null
-    Write-Host "  临时目录: $script:DownloadDir" -ForegroundColor DarkGray
+    if (-not (Test-Path $installPath)) { New-Item -ItemType Directory -Force -Path $installPath | Out-Null }
+    Write-Host "  安装目录: $installPath" -ForegroundColor DarkGray
 
-    $results = @{}
-    foreach ($tool in $Tools) {
-        Write-Step "[$tool] 安装"
-        if (Test-IsInstalled $tool) {
-            Write-Host "    [跳过] $tool 已安装" -ForegroundColor Yellow
-            $results[$tool] = "已安装（跳过）"
-            continue
-        }
+    if (-not $DownloadDir) { $script:DownloadDir = "$env:TEMP\ToolInstaller" }
+    New-Item -ItemType Directory -Force -Path $script:DownloadDir | Out-Null
+
+    # 过滤掉已安装的工具
+    $toInstall = $Tools | Where-Object {
+        if (Test-IsInstalled $_) {
+            Write-Host "  [跳过] $_ 已安装" -ForegroundColor Yellow
+            $false
+        } else { $true }
+    }
+    if (-not $toInstall) { return @{} }
+
+    # 获取所有下载信息
+    Write-Step "获取下载链接..."
+    $toolInfos = @{}
+    foreach ($tool in $toInstall) {
         try {
-            switch ($tool) {
-                "EcoPaste" {
-                    $url  = Get-GitHubLatestAsset "EcoPasteHub/EcoPaste" "x64-setup\.exe$"
-                    $file = "$script:DownloadDir\EcoPaste-setup.exe"
-                    Save-File $url $file; Invoke-NsisInstaller $file
+            $toolInfos[$tool] = Get-ToolInfo $tool $script:DownloadDir
+            Write-Ok "$tool 链接获取成功"
+        } catch {
+            Write-Err "$tool 获取链接失败: $_"
+            $toolInfos[$tool] = $null
+        }
+    }
+
+    # 并行下载所有工具
+    Write-Step "并行下载中..."
+    $jobs = @{}   # tool -> Task
+    $wcs  = @{}   # tool -> WebClient (保持引用防止 GC)
+    foreach ($tool in $toInstall) {
+        $info = $toolInfos[$tool]
+        if (-not $info) { continue }
+        $wc = [System.Net.WebClient]::new()
+        $wc.Headers.Add("User-Agent", "ToolInstaller/1.0")
+        if ($proxyUrl) {
+            $wc.Proxy = New-Object System.Net.WebProxy($proxyUrl, $true)
+            $wc.Proxy.Credentials = [System.Net.CredentialCache]::DefaultCredentials
+        }
+        $wcs[$tool]  = $wc
+        $jobs[$tool] = $wc.DownloadFileTaskAsync([uri]$info.Url, $info.File)
+    }
+
+    # 显示并行下载进度
+    $done = [System.Collections.Generic.HashSet[string]]::new()
+    while ($done.Count -lt $jobs.Count) {
+        $line = ""
+        foreach ($tool in $jobs.Keys) {
+            $task = $jobs[$tool]
+            $file = $toolInfos[$tool].File
+            if ($done.Contains($tool)) {
+                $line += "  [$tool] 完成  "
+            } elseif ($task.IsCompleted -or $task.IsFaulted -or $task.IsCanceled) {
+                $mb = if (Test-Path $file) { [math]::Round((Get-Item $file).Length / 1MB, 1) } else { 0 }
+                $done.Add($tool) | Out-Null
+                if ($task.IsFaulted) {
+                    $line += "  [$tool] 失败  "
+                    $toolInfos[$tool] = $null
+                } else {
+                    $line += "  [$tool] ${mb}MB 完成  "
                 }
-                "Pot" {
-                    $url  = Get-GitHubLatestAsset "pot-app/pot-desktop" "_x64-setup\.exe$"
-                    $file = "$script:DownloadDir\pot-setup.exe"
-                    Save-File $url $file; Invoke-NsisInstaller $file
-                }
-                "InputTips" {
-                    $url  = Get-GitHubLatestAsset "abgox/InputTip" "^InputTip\.exe$"
-                    $dest = "$env:LOCALAPPDATA\InputTip\InputTip.exe"
-                    New-Item -ItemType Directory -Force -Path (Split-Path $dest) | Out-Null
-                    Save-File $url $dest
-                    $shell = New-Object -ComObject WScript.Shell
-                    $lnk   = $shell.CreateShortcut("$env:APPDATA\Microsoft\Windows\Start Menu\Programs\InputTip.lnk")
-                    $lnk.TargetPath = $dest; $lnk.Save()
-                    Write-Info "已安装到 $dest"
-                }
-                "Everything" {
-                    $url  = Get-EverythingDownloadUrl
-                    $file = "$script:DownloadDir\Everything-setup.exe"
-                    Save-File $url $file; Invoke-NsisInstaller $file
-                }
-                "PixPin" {
-                    $url  = Get-PixPinDownloadUrl
-                    $file = "$script:DownloadDir\PixPin-setup.exe"
-                    Save-File $url $file; Invoke-NsisInstaller $file
-                }
+            } else {
+                $mb = if (Test-Path $file) { [math]::Round((Get-Item $file).Length / 1MB, 1) } else { 0 }
+                $line += "  [$tool] ${mb}MB 下载中  "
+            }
+        }
+        Write-Host "`r$line" -NoNewline -ForegroundColor Cyan
+        if ($done.Count -lt $jobs.Count) { Start-Sleep -Milliseconds 500 }
+    }
+    Write-Host ""
+    $wcs.Values | ForEach-Object { $_.Dispose() }
+
+    # 逐个安装（PixPin 放最后）
+    $results = @{}
+    $installOrder = $toInstall | Where-Object { $_ -ne "PixPin" }
+    if ($toInstall -contains "PixPin") { $installOrder = @($installOrder) + "PixPin" }
+    foreach ($tool in $installOrder) {
+        $info = $toolInfos[$tool]
+        if (-not $info) { $results[$tool] = "失败: 无法获取下载链接"; continue }
+        Write-Step "[$tool] 安装中..."
+        try {
+            if ($info.Type -eq "nsis") {
+                $p = Start-Process -FilePath $info.File -ArgumentList "/S /D=$installPath\$tool" -PassThru
+                if (-not $p.WaitForExit(120000)) { $p.Kill(); throw "安装超时（120秒）" }
+                if ($p.ExitCode -ne 0) { throw "安装程序退出码: $($p.ExitCode)" }
+            } elseif ($info.Type -eq "inno") {
+                $p = Start-Process -FilePath $info.File -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /DIR=`"$installPath\$tool`"" -PassThru
+                if (-not $p.WaitForExit(120000)) { $p.Kill(); throw "安装超时（120秒）" }
+                if ($p.ExitCode -ne 0) { throw "安装程序退出码: $($p.ExitCode)" }
+            } elseif ($info.Type -eq "portable") {
+                $dest = "$env:LOCALAPPDATA\InputTip\InputTip.exe"
+                New-Item -ItemType Directory -Force -Path (Split-Path $dest) | Out-Null
+                Copy-Item $info.File $dest -Force
+                $shell = New-Object -ComObject WScript.Shell
+                $lnk = $shell.CreateShortcut("$env:APPDATA\Microsoft\Windows\Start Menu\Programs\InputTip.lnk")
+                $lnk.TargetPath = $dest; $lnk.Save()
+                Write-Info "已安装到 $dest"
             }
             Write-Ok "$tool 安装成功"
             $results[$tool] = "成功"
@@ -385,10 +551,11 @@ while ($true) {
                 Write-Host "==============================`n" -ForegroundColor Cyan
             }
         }
-        "0" { Write-Host "再见！" -ForegroundColor Cyan; exit 0 }
+        "0" { Write-Host "再见！" -ForegroundColor Cyan; Read-Host "`n按 Enter 键退出"; exit 0 }
         default { Write-Host "  无效选项，请重新输入" -ForegroundColor Yellow }
     }
 }
+
 ```
 
 </TabItem>
