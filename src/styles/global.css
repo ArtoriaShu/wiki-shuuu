@@ -55,7 +55,7 @@
     transparent
   );
   --sl-color-hairline-light:#252525;
-  --sidebar-nav-height: 100px;
+  --sidebar-nav-height: 0px;
 
   /* 文档页标题大小 */
   --sl-text-h1: 1rem;
