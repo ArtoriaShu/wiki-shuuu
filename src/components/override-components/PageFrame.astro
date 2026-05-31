@@ -91,6 +91,10 @@ const { hasSidebar } = Astro.locals.starlightRoute;
       border-bottom: 1px solid
         color-mix(in srgb, var(--sl-color-white) 10%, transparent);
       padding: var(--sl-nav-pad-y) 0px;
+      background-color: var(--color-body);
+    }
+    :global([data-theme="light"]) .header {
+      background-color: var(--color-lightmode-body);
     }
     .sidebar {
       position: sticky;
