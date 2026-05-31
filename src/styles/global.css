@@ -156,6 +156,34 @@
 .sl-markdown-content h4:not(:where(.not-content *)) { font-size: 0.85rem !important; }
 .sl-container h1 { font-size: 24px !important; }
 
+/* View Transitions */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-out {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-8px); }
+}
+
+::view-transition-old(root) {
+  animation: 200ms ease-in fade-out;
+}
+::view-transition-new(root) {
+  animation: 250ms ease-out fade-in;
+}
+
+/* 滚动入场动画 */
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+.scroll-reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .sl-anchor-link { display: none !important; }
 
 .tool-table-wrap table {

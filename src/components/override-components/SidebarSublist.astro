@@ -170,14 +170,36 @@ const { sublist, nested } = Astro.props;
       border-radius: 8px;
       text-decoration: none;
       color: var(--sl-color-gray-2);
-      /* padding: 0.3em var(--sl-sidebar-item-padding-inline); */
       padding: 8px 10px;
       line-height: 1.4;
+      position: relative;
+      transition: color 0.2s ease, background-color 0.2s ease, padding-left 0.2s ease;
+    }
+
+    a::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%) scaleY(0);
+      width: 2px;
+      height: 60%;
+      background-color: var(--color-primary);
+      border-radius: 2px;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+      opacity: 0;
     }
 
     a:hover,
     a:focus {
       color: var(--sl-color-white);
+      padding-left: 14px;
+    }
+
+    a:hover::before,
+    a:focus::before {
+      transform: translateY(-50%) scaleY(1);
+      opacity: 1;
     }
 
     [aria-current="page"],
@@ -257,5 +279,58 @@ const { sublist, nested } = Astro.props;
     document.addEventListener("DOMContentLoaded", initializeSidebar);
   } else {
     initializeSidebar();
+  }
+
+  // 滑动选中态指示器
+  function initSidebarIndicator(): void {
+    const sidebarPane = document.getElementById("starlight__sidebar");
+    if (!sidebarPane) return;
+
+    let indicator = document.getElementById("sidebar-indicator") as HTMLElement | null;
+    if (!indicator) {
+      indicator = document.createElement("div");
+      indicator.id = "sidebar-indicator";
+      sidebarPane.prepend(indicator);
+    }
+
+    function moveIndicatorTo(link: HTMLElement): void {
+      if (!indicator || !sidebarPane) return;
+      const paneRect = sidebarPane.getBoundingClientRect();
+      const linkRect = link.getBoundingClientRect();
+      const top = linkRect.top - paneRect.top + sidebarPane.scrollTop;
+
+      // 第一次定位不加 transition，避免从顶部滑入
+      const isFirst = indicator.style.opacity === "" || indicator.style.opacity === "0";
+      if (isFirst) {
+        indicator.style.transition = "none";
+        indicator.style.opacity = "1";
+      } else {
+        indicator.style.transition = "transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), height 0.2s ease";
+      }
+
+      indicator.style.height = `${linkRect.height}px`;
+      indicator.style.transform = `translateY(${top}px)`;
+    }
+
+    // 初始定位到当前页
+    const activeLink = sidebarPane.querySelector<HTMLElement>("a[aria-current='page']");
+    if (activeLink) {
+      moveIndicatorTo(activeLink);
+    } else {
+      indicator.style.opacity = "0";
+    }
+
+    // 点击时先移动指示器再跳转
+    sidebarPane.querySelectorAll<HTMLElement>("a[href]").forEach((link) => {
+      link.addEventListener("click", () => {
+        moveIndicatorTo(link);
+      });
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initSidebarIndicator);
+  } else {
+    initSidebarIndicator();
   }
 </script>
